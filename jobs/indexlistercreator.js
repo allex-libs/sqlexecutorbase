@@ -14,6 +14,9 @@ function createIndexLister (execlib, mylib, sqlsentencinglib, specializations) {
   };
   IndexDescriptor.prototype.matchesColumns = function (columns) {
     var tc, c;
+    if (lib.isString(columns)) {
+      columns = [columns];
+    }
     if (!lib.isArray(columns)){
       return false;
     }
@@ -76,7 +79,64 @@ function createIndexLister (execlib, mylib, sqlsentencinglib, specializations) {
     this.all.add(indexdescriptor.name, indexdescriptor);
     return true;
   };
+  Indexes.prototype.matchesColumnsOnNonPrimary = function (columns) {
+    var ret;
+    if (!this.all) {
+      return false;
+    }
+    ret = this.all.traverseConditionally(columnMatcherOnNonPrimary.bind(this, columns));
+    columns = null;
+    return ret;
+  };  
+  Indexes.prototype.matchesColumnsOnAny = function (columns) {
+    var ret;
+    if (!this.all) {
+      return false;
+    }
+    ret = this.all.traverseConditionally(columnMatcherOnAny.bind(this, columns));
+    columns = null;
+    return ret;
+  };
+  Indexes.prototype.allIndexesExceptPrimaryNotIn = function (idxnames) {
+    var retobj, ret, primary;
+    if (!this.all) {
+      return [];
+    } 
+    retobj = {ret: []};
+    ret = retobj.ret;
+    primary = this.primary;
+    this.all.traverse(allIndexesExceptPrimaryNotInTraverser.bind(null, retobj, primary, idxnames));
+    retobj = null;
+    primary = null;
+    idxnames = null;
+    return ret;
+  };
   Indexes.prototype.IndexDescriptor = IndexDescriptor;
+
+  //static, this is Indexes
+  function columnMatcherOnNonPrimary (columns, idx, idxname) {
+    if (idx == this.primary) {
+      return;
+    }
+    return columnMatcherOnAny.call(this, columns, idx, idxname);
+  }
+  //static, this is Indexes
+  function columnMatcherOnAny (columns, idx, idxname) {
+    if (!idx.matchesColumns(columns)) {
+      return;
+    }
+    return idxname;
+  }
+  //non-static
+  function allIndexesExceptPrimaryNotInTraverser (retobj, primary, notin, ix, ixname) {
+    if (ix == primary) {
+      return;
+    }
+    if (notin.indexOf(ixname)>=0) {
+      return;
+    }
+    retobj.ret.push(ix);
+  }
 
   function IndexListerJob (executor, tablename, defer) {
     mylib.SyncQuery.call(

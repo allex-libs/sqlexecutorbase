@@ -11,7 +11,7 @@ function createKeyingFunctionality (execlib, specializations, mylib) {
     if (!lib.isArray(columns)) {
       throw new lib.Error('COLUMNS_NOT_AN_ARRAY', 'Columns provided to createIndexQuery have to be an Array of Strings');
     }
-    indexname = indexname || lib.uid();
+    indexname = indexname || 'idx_'+lib.uid();
     return 'CREATE INDEX '+
       mylib.entityNameOf(indexname)+
       ' ON '+mylib.entityNameOf(tablename)+' '+
@@ -22,10 +22,10 @@ function createKeyingFunctionality (execlib, specializations, mylib) {
     if (!lib.isArray(columns)) {
       throw new lib.Error('COLUMNS_NOT_AN_ARRAY', 'Columns provided to createPrimaryKeyQuery have to be an Array of Strings');
     }
-    indexname = indexname || lib.uid();
+    indexname = indexname || 'idx_'+lib.uid();
     return 'ALTER TABLE '+
       mylib.entityNameOf(tablename)+
-      ' ADD CONSTRAINT '+mylib.entityNameOf(indexname)+' '+
+      ' ADD CONSTRAINT '+mylib.entityNameOf(indexname)+' PRIMARY KEY CLUSTERED '+
       indexColumnsString(columns);
   }
 
