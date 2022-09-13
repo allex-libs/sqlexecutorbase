@@ -1,23 +1,35 @@
-function createTableManagement (execlib, mylib) {
+function createTableManagement (execlib, specializations, mylib) {
   'use strict';
 
   var lib = execlib.lib;
 
+  function readFieldType(flddesc) {
+    return flddesc.sqltype || flddesc.type
+  }
+
+  mylib.readFieldType = lib.isFunction(specializations.readFieldType)
+  ?
+  specializations.readFieldType
+  :
+  readFieldType;
+
   function fieldmapper(fld) {
     var ret;
+    var type;
     if (!fld) {
       throw new lib.Error('FIELD_DOES_NOT_EXIST', 'Field in the array of fields does not exist');
     }
+    type = mylib.readFieldType(fld);
     if (!lib.isString(fld.name)) {
-      throw new lib.Error(('FIELD_HAS_NO_NAME', 'Field in the array of fields has no name'));
+      throw new lib.JSONizingError('FIELD_HAS_NO_NAME', fld, 'Field in the array of fields has no name');
     }
-    if (!lib.isString(fld.type)) {
-      throw new lib.Error(('FIELD_HAS_NO_TYPE', 'Field in the array of fields has no type'));
+    if (!lib.isString(type)) {
+      throw new lib.JSONizingError('FIELD_HAS_NO_TYPE', fld, 'Field in the array of fields has no type');
     }
     if (!lib.isBoolean(fld.nullable)) {
-      throw new lib.Error(('FIELD_HAS_NO_NULLABLE', 'Field in the array of fields has no nullable property (boolean)'));
+      throw new lib.JSONizingError('FIELD_HAS_NO_NULLABLE', fld, 'Field in the array of fields has no nullable property (boolean)');
     }
-    ret = fld.name+' '+fld.type+' '+(fld.nullable ? 'NULL' : 'NOT NULL');
+    ret = fld.name+' '+type+' '+(fld.nullable ? 'NULL' : 'NOT NULL');
     if (fld.constraint) {
       ret+=(' '+fld.constraint);
     }
@@ -44,6 +56,6 @@ function createTableManagement (execlib, mylib) {
     return ret;
   }
 
-  mylib.createTable = createTable;
+  mylib.createTable = specializations.createTableCreator(fieldmapper);
 }
 module.exports = createTableManagement;

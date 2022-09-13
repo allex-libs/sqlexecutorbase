@@ -1,6 +1,7 @@
-function createSyncSingleQuery (lib, mylib) {
+function createSyncSingleQuery (execlib, mylib, specializations) {
   'use strict';
 
+  var lib = execlib.lib;
   var SyncQueryJob = mylib.SyncQuery;
 
   function SyncSingleQueryJob (executor, query, defer) {
@@ -8,10 +9,13 @@ function createSyncSingleQuery (lib, mylib) {
   }
   lib.inherit(SyncSingleQueryJob, SyncQueryJob);
   SyncSingleQueryJob.prototype.onResult = function (res) {
-    this.resolve(res.recordset);
+    throw new lib.Error('NOT_IMPLEMENTED', this.constructor.name+' has to implement onResult');
   };
 
-
-  mylib.SyncSingleQuery = SyncSingleQueryJob;
+  mylib.SyncSingleQuery = lib.isFunction(specializations.syncsinglequery)
+  ?
+  specializations.syncsinglequery(execlib, SyncSingleQueryJob)
+  :
+  SyncSingleQueryJob;
 }
 module.exports = createSyncSingleQuery;

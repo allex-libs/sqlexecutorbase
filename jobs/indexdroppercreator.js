@@ -8,10 +8,15 @@ function createIndexDropperJob (lib, mylib) {
 
   mylib.IndexDropper = IndexDropperJob;
 
+  var _id = 0;
   function PrimaryKeyDropperJob (executor, tablename, indexname, defer) {
+    this.id = ++_id;
     mylib.SyncQuery.call(this, executor, 'ALTER TABLE "'+tablename+'" DROP CONSTRAINT "'+indexname+'"', defer);
   }
   lib.inherit(PrimaryKeyDropperJob, mylib.SyncQuery);
+  PrimaryKeyDropperJob.prototype.destroy = function () {
+    mylib.SyncQuery.prototype.destroy.call(this);
+  };
   
   mylib.PrimaryKeyDropper = PrimaryKeyDropperJob;
 }

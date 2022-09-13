@@ -30,11 +30,14 @@ function createBaseJob (lib, mylib) {
     if (!ok.ok) {
       return ok.val;
     }
+    lib.runNext(this.goConnect.bind(this));
+    return ok.val;
+  };
+  BaseMSSQLJob.prototype.goConnect = function () {
     this.destroyable.connect().then(
       this.onPool.bind(this),
       this.reject.bind(this)
     );
-    return ok.val;
   };
   BaseMSSQLJob.prototype.onPool = function (pool) {
     if (!this.okToProceed()) {

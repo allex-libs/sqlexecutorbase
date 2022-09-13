@@ -6,7 +6,7 @@ function createSqlSentencingLib (execlib, specializations) {
   require ('./sqlvaluercreator')(execlib, mylib);
   require ('./keyingcreator')(execlib, specializations, mylib);
   require ('./sqlsentencercreator')(execlib, mylib);
-  require ('./tablemanagementcreator')(execlib, mylib);
+  require ('./tablemanagementcreator')(execlib, specializations, mylib);
 
   return mylib;
 }

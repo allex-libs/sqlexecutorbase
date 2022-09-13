@@ -8,6 +8,10 @@ function createSyncQueryJob (lib, mylib) {
     this.query = query;
   }
   lib.inherit(SyncQueryJob, SyncJob);
+  SyncQueryJob.prototype.destroy = function () {
+    this.query = null;
+    SyncJob.prototype.destroy.call(this);
+  };
   SyncQueryJob.prototype.useTheRequest = function (request) {
     return request.query(this.query);
   };

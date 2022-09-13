@@ -46,26 +46,6 @@ function createTxnWrappedJobCore (execlib, specializations, mylib) {
     'run'
   ];
 
-  function TxnedExecutor (txn) {
-    this.txn = txn;
-    this.resourceHandlingOptions = {};
-    this.connected = this.txn.connected;
-  }
-  TxnedExecutor.prototype.destroy = function () {
-    this.connected = null;
-    this.resourceHandlingOptions = null;
-    this.txn = null;
-  };
-  TxnedExecutor.prototype.connect = function () {
-    this.connected = this.txn.connected;
-    return this.connected ? q(this.txn) : q.reject(new lib.Error('TRANSACTION_DISCONNECTED'));
-  };
-  TxnedExecutor.prototype.isResourceUsable = function (connection) {
-    throw new lib.Error('NOT_IMPLEMENTED', this.constructor.name+' has to implement isResourceUsable');
-  };
-
-  mylib.TxnedExecutor = specializations.txnedexecutor(execlib, TxnedExecutor);
-
   function TxnWrappedJobCore (executor, jobproducerfunc) {
     this.executor = executor;
     this.jobProducerFunc = jobproducerfunc;
@@ -109,18 +89,16 @@ function createTxnWrappedJobCore (execlib, specializations, mylib) {
     return this.executor.connect();
   };
   TxnWrappedJobCore.prototype.onConnected = function (pool) {
-    this.pool = pool;
-    this.txn = this.pool.transaction();
+    throw new lib.Error('NOT_IMPLEMENTED', this.constructor.name+' has to implement onConnected');
   };
   TxnWrappedJobCore.prototype.beginTransaction = function () {
-    return this.txn.begin();
+    throw new lib.Error('NOT_IMPLEMENTED', this.constructor.name+' has to implement beginTransaction');
   };
   TxnWrappedJobCore.prototype.onTransactionBegun = function () {
     this.txnUnderWay = true;
   };
   TxnWrappedJobCore.prototype.createWrapped = function () {
-    this.txnExecutor = new mylib.TxnedExecutor(this.txn);
-    return this.jobProducerFunc(this.txnExecutor);
+    throw new lib.Error('NOT_IMPLEMENTED', this.constructor.name+' has to implement createWrapped');
   };
   TxnWrappedJobCore.prototype.onWrapped = function (wrapped) {
     this.jobToWrap = wrapped;
@@ -135,13 +113,7 @@ function createTxnWrappedJobCore (execlib, specializations, mylib) {
     this.result = runresult;
   };
   TxnWrappedJobCore.prototype.finalizeTxn = function () {
-    this.txnUnderWay = false;
-    if (!this.result.fail) {
-      return this.txn.commit();
-    }
-    if (!this.txn._aborted) {
-      return this.txn.rollback();
-    }
+    throw new lib.Error('NOT_IMPLEMENTED', this.constructor.name+' has to implement finalizeTxn');
   };
   TxnWrappedJobCore.prototype.finalize = function () {
     this.txn = null;

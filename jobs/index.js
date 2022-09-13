@@ -7,7 +7,7 @@ function createMSSQLJobs (execlib, sqlsentencing, specializations) {
     require ('./asynccreator')(execlib, mylib, specializations);
 
     require ('./syncquerycreator')(lib, mylib);
-    require ('./syncsinglequerycreator')(lib, mylib);
+    require ('./syncsinglequerycreator')(execlib, mylib, specializations);
     require ('./asyncquerycreator')(execlib, mylib, specializations);
 
     require ('./indexlistercreator')(execlib, mylib, sqlsentencing, specializations);

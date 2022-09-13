@@ -17,7 +17,7 @@ function createSyncJob (lib, mylib) {
     catch (e) {
       this.reject(e);
     }
-  }
+  };
   SyncJob.prototype.onResult = function (res) {
     this.resolve(res);
   };
