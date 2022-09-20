@@ -1,4 +1,4 @@
-function createMSSQLExecutor (execlib, resourcehandlinglib) {
+function createMSSQLExecutor (execlib, resourcehandlinglib, templateslib) {
   'use strict';
   var mylib = {};
   
@@ -7,7 +7,7 @@ function createMSSQLExecutor (execlib, resourcehandlinglib) {
   require('./executorcreator')(execlib, resourcehandlinglib, mylib);
 
   mylib.createSqlSentencing = function (specializations) {
-    return require('./sqlsentencing')(execlib, specializations);
+    return require('./sqlsentencing')(execlib, templateslib, specializations);
   };
   mylib.createJobs = function (sqlsentencting, specializations) {
     return require('./jobs')(execlib, sqlsentencting, specializations);
@@ -20,7 +20,7 @@ function createMSSQLExecutor (execlib, resourcehandlinglib) {
 }
 function createLib (execlib) {
   'use strict';
-  var ret = execlib.loadDependencies('client', ['allex:resourcehandling:lib'], createMSSQLExecutor.bind(null, execlib));
+  var ret = execlib.loadDependencies('client', ['allex:resourcehandling:lib','allex:templateslite:lib'], createMSSQLExecutor.bind(null, execlib));
   execlib = null;
   return ret;
 }
