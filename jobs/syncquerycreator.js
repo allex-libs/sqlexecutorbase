@@ -16,6 +16,10 @@ function createSyncQueryJob (lib, mylib) {
     return request.query(this.query);
   };
 
+  SyncQueryJob.prototype.makeUpError = function (reason) {
+    return new lib.Error('SYNCQUERY_ERROR', lib.joinStringsWith(this.query, reason ? reason.message : '', '\n'));
+  };
+
   mylib.SyncQuery = SyncQueryJob;
 }
 module.exports = createSyncQueryJob;

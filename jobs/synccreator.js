@@ -22,10 +22,14 @@ function createSyncJob (lib, mylib) {
     this.resolve(res);
   };
   SyncJob.prototype.onFailed = function (reason) {
-    this.reject(reason);
+    this.reject(this.makeUpError(reason));
   };
   SyncJob.prototype.useTheRequest = function (request) {
     throw new lib.Error('NOT_IMPLEMENTED', this.constructor.name+' has to implement useTheRequest');
+  };
+
+  SyncJob.prototype.makeUpError = function (reason) {
+    return reason;
   };
 
   mylib.Sync = SyncJob;
