@@ -14,6 +14,8 @@ function createMSSQLJobs (execlib, sqlsentencing, specializations) {
     require ('./indexcreatorcreator')(lib, mylib, sqlsentencing);
     require ('./indexdroppercreator')(lib, mylib, sqlsentencing);
 
+    require ('./complex')(lib, mylib, sqlsentencing);
+
     /*
     require ('./steppedjobcreator')(lib, mylib);
     require ('./indexlistercreator')(lib, mylib, sqlsentencinglib);

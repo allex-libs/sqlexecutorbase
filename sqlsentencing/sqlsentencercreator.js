@@ -19,6 +19,15 @@ function createSqlSentencer(execlib, mylib){
     }
     return "INSERT INTO "+mylib.entityNameOf(tablename)+" ("+cols.join(',')+") VALUES("+values.join(',')+")";
   };
+  SqlSentencer.prototype.insertFromFieldNames = function(tablename, fieldnames, record) {
+    var cols = [], values = [], fn, i;
+    for(i=0; i<fieldnames.length; i++){
+      fn = fieldnames[i];
+      cols.push(mylib.entityNameOf(fn));
+      values.push(mylib.toSqlValue(record[fn]));
+    }
+    return "INSERT INTO "+mylib.entityNameOf(tablename)+" ("+cols.join(',')+") VALUES("+values.join(',')+")";
+  };
   SqlSentencer.prototype.setClauseFromObject = function (obj) {
     var ret = '';
     for (var p in obj) {

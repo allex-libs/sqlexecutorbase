@@ -60,6 +60,15 @@ function createSqlValuer (execlib, mylib) {
     if (lib.isBoolean(value)) return value ? 1 : 0;
     return _NULL;
   }
+  function hashToSqlValue (hash) {
+    var ret = {}, _r = ret;
+    lib.traverseShallow(hash, hashToSqlValueer.bind(null, _r));
+    _r = null;
+    return ret;
+  }
+  function hashToSqlValueer (ret, val, name) {
+    ret[name] = toSqlValue(val);
+  }
   function equal (a, b) {
     var b1 = toSqlValue(b);
     return a+(b1==_NULL ? ' IS ' : '<>')+b1;
@@ -89,15 +98,57 @@ function createSqlValuer (execlib, mylib) {
     var scalarsqlname = scalarsqlname||'a';
     return '(SELECT '+scalarsqlname+' FROM (VALUES'+arrayofscalars.map(scalarmapper).join(',')+') AS t('+scalarsqlname+'))';
   }
-  function toValuesOfHashArray (arrayofhashes, arrayofhashpropertynames) {
+  function justValuesOfHashArray (arrayofhashes, arrayofhashpropertynames) {
+    var ret;
+    if (!lib.isArray(arrayofhashes)) {
+      throw new lib.Error('HASHES_NOT_AN_ARRAY', 'Hashes has to be an Array of Objects');
+    }
+    if (!lib.isArray(arrayofhashpropertynames)) {
+      throw new lib.Error('HASHPROPERTYNAMES_NOT_AN_ARRAY', 'Hash property names has to be an Array of Strings');
+    }
+    ret = 'VALUES'+arrayofhashes.map(hashmapper.bind(null, arrayofhashpropertynames));
+    arrayofhashpropertynames = null;
+    return ret;
+  }
+  function toValuesTableOfHashArray (arrayofhashes, arrayofhashpropertynames) {
     var hpns, ret;
+    if (!lib.isArray(arrayofhashes)) {
+      throw new lib.Error('HASHES_NOT_AN_ARRAY', 'Hashes has to be an Array of Objects');
+    }
     if (!lib.isArray(arrayofhashpropertynames)) {
       throw new lib.Error('HASHPROPERTYNAMES_NOT_AN_ARRAY', 'Hash property names has to be an Array of Strings');
     }
     hpns = arrayofhashpropertynames.join(',');
-    ret = '(SELECT '+hpns+' FROM (VALUES'+arrayofhashes.map(hashmapper.bind(null, arrayofhashpropertynames))+') AS t('+hpns+'))';
-    arrayofhashpropertynames = null;
+    ret = '('+justValuesOfHashArray(arrayofhashes, arrayofhashpropertynames)+') AS t('+hpns+')';
     return ret;
+  }
+  function toValuesOfHashArray (arrayofhashes, arrayofhashpropertynames) {
+    var hpns, ret;
+    if (!lib.isArray(arrayofhashes)) {
+      throw new lib.Error('HASHES_NOT_AN_ARRAY', 'Hashes has to be an Array of Objects');
+    }
+    if (!lib.isArray(arrayofhashpropertynames)) {
+      throw new lib.Error('HASHPROPERTYNAMES_NOT_AN_ARRAY', 'Hash property names has to be an Array of Strings');
+    }
+    hpns = arrayofhashpropertynames.join(',');
+    ret = '(SELECT '+hpns+' FROM '+toValuesTableOfHashArray(arrayofhashes, arrayofhashpropertynames)+')';
+    return ret;
+  }
+  function insertValuesOfHashArray (tablename, arrayofhashes, arrayofhashpropertynames) {
+    var hpns, ret;
+    if (!lib.isArray(arrayofhashes)) {
+      throw new lib.Error('HASHES_NOT_AN_ARRAY', 'Hashes has to be an Array of Objects');
+    }
+    if (!lib.isArray(arrayofhashpropertynames)) {
+      throw new lib.Error('HASHPROPERTYNAMES_NOT_AN_ARRAY', 'Hash property names has to be an Array of Strings');
+    }
+    if (arrayofhashes.length<1) {
+      return '';
+    }
+    hpns = arrayofhashpropertynames.join(',');
+    ret = 'INSERT INTO '+tablename+' ('+hpns+') '+justValuesOfHashArray(arrayofhashes, arrayofhashpropertynames);
+    return ret;
+
   }
 
   function SetStringMaker(obj){
@@ -108,7 +159,7 @@ function createSqlValuer (execlib, mylib) {
     return arryObj.arry.join(',');
   }
   function set_string_maker_cb(arryObj, item, key){
-    arryObj.arry.push(''+key + '=' + sqlValueOf(item));
+    arryObj.arry.push(''+key + '=' + toSqlValue(item));
   }
 
   function InsertStringMaker(obj){
@@ -121,20 +172,61 @@ function createSqlValuer (execlib, mylib) {
   }
   function insert_string_maker_cb(arryObj, item, key){
     arryObj.arry1.push(''+key);
-    arryObj.arry2.push('' + sqlValueOf(item));
+    arryObj.arry2.push('' + toSqlValue(item));
   }
+
+  function selectViaFieldNames (tablename, wherefieldnames, record) {
+    var whereclauses = [], wherefn, i;
+    for(i=0; i<wherefieldnames.length; i++){
+      wherefn = wherefieldnames[i];
+      whereclauses.push(mylib.entityNameOf(wherefn)+'='+mylib.toSqlValue(record[wherefn]));
+    }
+    return "SELECT * FROM "+mylib.entityNameOf(tablename)+" WHERE "+whereclauses.join(' AND ');
+  };
+  function selectViaFieldNamesFromHashArray (tablename, wherefieldnames, records) {
+    var whereclauses = [], subwhereclauses = [], wherefn, i, j, r;
+    for(i=0; i<records.length; i++) {
+      r = records[i];
+      for(j=0; j<wherefieldnames.length; j++){
+        wherefn = wherefieldnames[j];
+        subwhereclauses.push(mylib.entityNameOf(wherefn)+'='+mylib.toSqlValue(r[wherefn]));
+      }
+      whereclauses.push(subwhereclauses.join(' AND '));
+    }
+    return "SELECT * FROM "+mylib.entityNameOf(tablename)+" WHERE "+subwhereclauses.join(' AND ');
+  };
+  function updateViaWhereAndSetFieldNames (tablename, wherefieldnames, setfieldnames, record) {
+    var whereclauses = [], wherefn, setclauses = [], setfn, i;
+    for(i=0; i<wherefieldnames.length; i++){
+      wherefn = wherefieldnames[i];
+      whereclauses.push(mylib.entityNameOf(wherefn)+'='+mylib.toSqlValue(record[wherefn]));
+    }
+    for(i=0; i<setfieldnames.length; i++) {
+      setfn = setfieldnames[i];
+      setclauses.push(mylib.entityNameOf(setfn)+'='+mylib.toSqlValue(record[setfn]));
+    }
+    return "UPDATE "+mylib.entityNameOf(tablename)+" SET "+setclauses.join(', ')+" WHERE "+whereclauses.join(' AND ');
+  };
+
 
   mylib.dateformat = 'mdy';
   mylib.entityNameOf = entityNameOf;
   mylib.quoted = quoted;
   mylib.sqlValueOf = sqlValueOf;
   mylib.toSqlValue = toSqlValue;
+  mylib.hashToSqlValue = hashToSqlValue;
   mylib.equal = equal;
   mylib.unEqual = unEqual;
+  mylib.justValuesOfHashArray = justValuesOfHashArray;
+  mylib.toValuesTableOfHashArray = toValuesTableOfHashArray;
   mylib.toValuesOfScalarArray = toValuesOfScalarArray;
   mylib.toValuesOfHashArray = toValuesOfHashArray;
+  mylib.insertValuesOfHashArray = insertValuesOfHashArray;
   mylib.SetStringMaker = SetStringMaker;
   mylib.InsertStringMaker = InsertStringMaker;
+  mylib.selectViaFieldNames = selectViaFieldNames;
+  mylib.selectViaFieldNamesFromHashArray = selectViaFieldNamesFromHashArray;
+  mylib.updateViaWhereAndSetFieldNames = updateViaWhereAndSetFieldNames;
 }
 
 module.exports = createSqlValuer;

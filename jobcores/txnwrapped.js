@@ -73,7 +73,7 @@ function createTxnWrappedJobCore (execlib, specializations, mylib) {
   };
   TxnWrappedJobCore.prototype.shouldContinue = function () {
     if (!this.executor) {
-      return new lib.Error('NO_EXECUTOR');
+      return new lib.Error('NO_EXECUTOR', 'No Executor');
     }
     if (!lib.isFunction(this.jobProducerFunc)) {
       return new lib.Error('JOB_PRODUCER_FUNC_NOT_A_FUNCTION');

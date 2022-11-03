@@ -5,7 +5,7 @@ function createTemplatizers (execlib, templateslib, mylib) {
   function processTemplate(template, replacements) {
     var tmplt;
     if (lib.isArray(template)) {
-      tmplt = template.join(' ');
+      tmplt = template.join('\n');
     }
     if (lib.isString(template)) {
       tmplt = template;

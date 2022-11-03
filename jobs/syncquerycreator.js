@@ -13,6 +13,7 @@ function createSyncQueryJob (lib, mylib) {
     SyncJob.prototype.destroy.call(this);
   };
   SyncQueryJob.prototype.useTheRequest = function (request) {
+    this.destroyable.maybeLog(this.query);
     return request.query(this.query);
   };
 
