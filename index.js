@@ -1,4 +1,4 @@
-function createMSSQLExecutor (execlib, resourcehandlinglib, templateslib) {
+function createSQLExecutor (execlib, resourcehandlinglib, templateslib) {
   'use strict';
   var mylib = {};
   
@@ -14,13 +14,14 @@ function createMSSQLExecutor (execlib, resourcehandlinglib, templateslib) {
   };
   mylib.createJobCores = function (specializations) {
     return require('./jobcores')(execlib, specializations);
-  }
+  };
+  mylib.createExecutorQueueing = require('./queueing').bind(null, execlib, templateslib);
 
   return mylib;
 }
 function createLib (execlib) {
   'use strict';
-  var ret = execlib.loadDependencies('client', ['allex:resourcehandling:lib','allex:templateslite:lib'], createMSSQLExecutor.bind(null, execlib));
+  var ret = execlib.loadDependencies('client', ['allex:resourcehandling:lib','allex:templateslite:lib'], createSQLExecutor.bind(null, execlib));
   execlib = null;
   return ret;
 }

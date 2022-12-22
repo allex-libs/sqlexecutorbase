@@ -9,9 +9,19 @@ function createExecutor (execlib, resourcehandlinglib, mylib) {
     ResMixin.call(this, options);
     this.dbname = null;
     this.logname = null;
+    this.queueTypeRegistry = null;
+    this.queuer = null;
   }
   ResMixin.addMethods(SQLExecutor);
   SQLExecutor.prototype.destroy = function () {
+    if (this.queuer) {
+      this.queuer.reject(new lib.Error('SQL_EXECUTOR_DYING', 'This instance of '+this.constructor.name+'is already dying'));
+    }
+    this.queuer = null;
+    if(this.queueTypeRegistry) {
+       this.queueTypeRegistry.destroy();
+    }
+    this.queueTypeRegistry = null;
     this.logname = null;
     this.dbname = null;
     ResMixin.prototype.destroy.call(this);
