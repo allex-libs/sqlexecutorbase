@@ -4,8 +4,8 @@ function createSyncSingleQuery (execlib, mylib, specializations) {
   var lib = execlib.lib;
   var SyncQueryJob = mylib.SyncQuery;
 
-  function SyncSingleQueryJob (executor, query, defer) {
-    SyncQueryJob.call(this, executor, query, defer);
+  function SyncSingleQueryJob (executor, query, options, defer) {
+    SyncQueryJob.call(this, executor, query, options, defer);
   }
   lib.inherit(SyncSingleQueryJob, SyncQueryJob);
   SyncSingleQueryJob.prototype.onResult = function (res) {

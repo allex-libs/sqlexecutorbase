@@ -3,12 +3,17 @@ function createSyncQueryJob (lib, mylib) {
 
   var SyncJob = mylib.Sync;
 
-  function SyncQueryJob (executor, query, defer) {
+  function SyncQueryJob (executor, query, options, defer) {
+    if (options && lib.isFunction(options.resolve)) {
+      throw new lib.Error('BACKWARDS_INCOMPATIBILITY', 'options is now the third ctor parameter, and defer is the fourth');
+    }
     SyncJob.call(this, executor, defer);
     this.query = query;
+    this.options = options;
   }
   lib.inherit(SyncQueryJob, SyncJob);
   SyncQueryJob.prototype.destroy = function () {
+    this.options = null;
     this.query = null;
     SyncJob.prototype.destroy.call(this);
   };
