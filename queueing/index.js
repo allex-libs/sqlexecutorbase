@@ -6,14 +6,15 @@ function createQueueing (execlib, templateslib, mylib) {
   var lib = execlib.lib;
   var q = lib.q;
 
-  mylib.Executor.prototype.queue = function (queuobj) {
-    this.validateQueueObj(queuobj);
+  mylib.Executor.prototype.queue = function (queueobj) {
+    var myqobj = lib.extend({}, queueobj);
+    this.validateQueueObj(myqobj);
     if (!this.queuer) {
       this.queuer = new Queuer(this);
       lib.runNext(queueTriggerer.bind(this));
     }
-    this.queuer.push(queuobj);
-    return queuobj.defer.promise;
+    this.queuer.push(myqobj);
+    return myqobj.defer.promise;
   };
   mylib.Executor.prototype.validateQueueObj = function (item) {
     var t;
@@ -52,19 +53,18 @@ function createQueueing (execlib, templateslib, mylib) {
     cursor = cursor || 0;
     for (i=0; i<items.length; i++) {
       item = items[i];
-      defer = item.defer;
-      ret.push(defer.promise);
+      ret.push(item.defer.promise);
       analysis({
         executor: this,
         item: item,
         recordsets: recordsets,
         cursor: cursor
       }).then(
-        defer.resolve.bind(defer),
-        defer.reject.bind(defer)
+        onAnalysisSucceeded.bind(item),
+        onAnalysisFailed.bind(item)
       );
-      defer = null;
       cursor += item.recordsetcount;
+      item = null;
     }
     return ret;
   };
@@ -95,5 +95,19 @@ function createQueueing (execlib, templateslib, mylib) {
   }
   //endof statics for Executor
 
+  //statics for Queue item
+  function onAnalysisSucceeded (res) {
+    if (this.defer) {
+      this.defer.resolve(res);
+    }
+    this.defer = null;
+  }
+  function onAnalysisFailed (reason) {
+    if (this.defer) {
+      this.defer.reject(reason);
+    }
+    this.defer = null;
+  }
+  //endof statics for Queue item
 }
 module.exports = createQueueing;
