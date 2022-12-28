@@ -8,10 +8,21 @@ function createFirstRecord (execlib, mylib) {
     return t.validator.call(this, executor);
   }
 
-  function analyzer (recordsets, cursor) {
+  function analyzer (recordsets, cursor, executor) {
     var mycursor = cursor + (this.recordsetoffset||0);
     var rs = recordsets[mycursor];
-    return (lib.isArray(rs) && rs.length>0) ? rs[0] : null;
+    var rec;
+    var lut;
+    var myrs;
+    lut = executor.queueTypeRegistry.get('lookup');
+    if (!lut) {
+      throw new lib.Error('NO_LOOKUP_TYPE_FOR_FIRSTRECOR', 'firstrecord type needs the "lookup" type for analysis');
+    }
+    rec = (lib.isArray(rs) && rs.length>0) ? rs[0] : null;
+    myrs = [rec];
+    myrs.columns = rs.columns;
+    return lut.analyzer.call(this, [myrs], 0, executor);
+    return rec;
   }
 
   return {
