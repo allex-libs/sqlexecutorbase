@@ -6,27 +6,14 @@ function createQueueResultAnalysisJob (execlib, templateslib, mylib) {
   var qlib = lib.qlib;
   var SteppedJobOnSteppedInstance = qlib.SteppedJobOnSteppedInstance;
 
-  //statics for Queue Items
-  function targetForItem () {
-    if (this.result) {
-      return this.result;
-    }
-    if (lib.isString(this.field)) {
-      return {};
-    }
-    if (lib.isArrayOfStrings(this.fields)) {
-      return {};
-    }
-    return [];
-  }
-  //endof statics for Queue Items
-
   function QueueResultAnalysisJobCore (options) {
     this.options = options;
     this.finalResult = void 0;
     this.target = null;
+    this.autoCreate = null;
   }
   QueueResultAnalysisJobCore.prototype.destroy = function () {
+    this.autoCreate = null;
     this.target = null;
     this.finalResult = null;
     this.options = null;
@@ -53,7 +40,7 @@ function createQueueResultAnalysisJob (execlib, templateslib, mylib) {
   };
 
   QueueResultAnalysisJobCore.prototype.init = function () {
-    this.target = targetForItem.call(this.options.item);
+    this.evaluateTargetForItem(this.options.item);
   };
   QueueResultAnalysisJobCore.prototype.extractRawResult = function () {
     var t = this.options.executor.queueTypeRegistry.get(this.options.item.type);
@@ -84,12 +71,12 @@ function createQueueResultAnalysisJob (execlib, templateslib, mylib) {
   QueueResultAnalysisJobCore.prototype.packProcResults = function (procsres) {
     var ret;
     if (lib.isArray(this.options.item.fields)) {
-      ret = this.options.item.fields.reduce(packer.bind(null, procsres), this.target);
+      ret = this.options.item.fields.reduce(packer.bind(this, procsres), this.target);
       procsres = null;
       return ret;
     }
     if (lib.isString(this.options.item.field)) {
-      this.target[this.options.item.field] = procsres;
+      lib.writePropertyFromDotDelimitedString(this.target, this.options.item.field, procsres);
       return this.target;
     }
     return procsres;
@@ -105,6 +92,28 @@ function createQueueResultAnalysisJob (execlib, templateslib, mylib) {
     'packProcResults',
     'finalize'
   ];
+
+  QueueResultAnalysisJobCore.prototype.evaluateTargetForItem  = function (item) {
+    if (item.result) {
+      this.target = item.result;
+      this.autoCreate = false;
+      return;
+    }
+    if (lib.isString(this.field)) {
+      this.target = {};
+      this.autoCreate = true;
+      return;
+    }
+    if (lib.isArrayOfStrings(this.fields)) {
+      this.target = {};
+      this.autoCreate = true;
+      return;
+    }
+    this.target = [];
+    this.autoCreate = false;
+  };
+
+
 
   //statics
   function multiprocer (procs, res, rawres, index) {
@@ -123,13 +132,13 @@ function createQueueResultAnalysisJob (execlib, templateslib, mylib) {
     res.ress.push(procret);
     return res;
   }
+  function packer (procsres, res, fld, index) {
+    lib.writePropertyFromDotDelimitedString(res, fld, procsres[index], this.autoCreate);
+    return res;
+  }
   //endof statics
   function resassigner (arry, index, val) {
     arry[index] = val;
-  }
-  function packer (procsres, res, fld, index) {
-    res[fld] = procsres[index];
-    return res;
   }
 
   function QueueResultAnalysisJob (options, defer) {
