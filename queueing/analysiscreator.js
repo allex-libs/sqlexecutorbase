@@ -76,7 +76,7 @@ function createQueueResultAnalysisJob (execlib, templateslib, mylib) {
       return ret;
     }
     if (lib.isString(this.options.item.field)) {
-      lib.writePropertyFromDotDelimitedString(this.target, this.options.item.field, procsres);
+      lib.writePropertyFromDotDelimitedString(this.target, this.options.item.field, procsres, this.autoCreate);
       return this.target;
     }
     return procsres;
@@ -99,12 +99,12 @@ function createQueueResultAnalysisJob (execlib, templateslib, mylib) {
       this.autoCreate = false;
       return;
     }
-    if (lib.isString(this.field)) {
+    if (lib.isString(item.field)) {
       this.target = {};
       this.autoCreate = true;
       return;
     }
-    if (lib.isArrayOfStrings(this.fields)) {
+    if (lib.isArrayOfStrings(item.fields)) {
       this.target = {};
       this.autoCreate = true;
       return;

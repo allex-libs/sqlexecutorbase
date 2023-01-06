@@ -77,7 +77,12 @@ function createLookupType (execlib, mylib) {
     dbname: null,
     type: 'lookup',
     validator: validator,
-    analyzer: analyzer
+    analyzer: analyzer,
+    schema: {
+      table: {type: 'string', required: true},
+      what: {type: 'string', required: true},
+      where: {type: 'string'}
+    }
   }
 }
 module.exports = createLookupType;
