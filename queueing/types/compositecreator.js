@@ -10,10 +10,7 @@ function createCompositeType (execlib, mylib) {
 
   function sentencer (executor) {
     this.items.forEach(executor.validateQueueObj.bind(executor));
-    return mylib.sqlsentencing.processTemplate(
-      this.items.map(subsentencer),
-      {}
-    );
+    return this.items.map(subsentencer).join(';\n');
   }
 
   function validator (executor) {

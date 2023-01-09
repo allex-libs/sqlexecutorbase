@@ -1,7 +1,7 @@
-function createQueueing (execlib, templateslib, mylib) {
+function createQueueing (execlib, templateslib, mylib, qinghelperfuncs) {
   'use strict';
 
-  var Queuer = require('./queuercreator')(execlib, mylib);
+  var Queuer = require('./queuercreator')(execlib, mylib, qinghelperfuncs);
   var analysis = require('./analysiscreator')(execlib, templateslib, mylib);
   var lib = execlib.lib;
   var q = lib.q;

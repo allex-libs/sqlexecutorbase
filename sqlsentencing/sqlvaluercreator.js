@@ -1,4 +1,4 @@
-function createSqlValuer (execlib, mylib) {
+function createSqlValuer (execlib, mylib, specializations) {
   'use strict';
 
   var lib = execlib.lib;
@@ -8,7 +8,6 @@ function createSqlValuer (execlib, mylib) {
     if (!lib.isVal(val)) return _NULL;
     if (val[0]=='"') return val;
     return '"'+val+'"';
-
   }
   function quoted (val) {
     if (!lib.isVal(val)) return _NULL;
@@ -210,7 +209,7 @@ function createSqlValuer (execlib, mylib) {
 
 
   mylib.dateformat = 'mdy';
-  mylib.entityNameOf = entityNameOf;
+  mylib.entityNameOf = specializations.entityNameOf || entityNameOf;
   mylib.quoted = quoted;
   mylib.sqlValueOf = sqlValueOf;
   mylib.toSqlValue = toSqlValue;

@@ -1,4 +1,4 @@
-function createQueuer (execlib, mylib) {
+function createQueuer (execlib, mylib, qinghelperfuncs) {
   'use strict';
 
   var lib = execlib.lib;
@@ -41,7 +41,7 @@ function createQueuer (execlib, mylib) {
   Queuer.prototype.go = function () {
     (new mylib.jobs.SyncQuery(
       this.executor,
-      this.q.map(sentencer).join('\n')
+      this.q.map(sentencer).join(';\n')
     )).go().then(
       this.onQuery.bind(this),
       this.reject.bind(this)
@@ -52,6 +52,7 @@ function createQueuer (execlib, mylib) {
   }
   Queuer.prototype.onQuery = function (res) {
     var promises;
+    res = qinghelperfuncs.recordsetFormatProducer(res);
     if (!res) {
       this.reject(new lib.Error('NO_QUERY_RESULT', this.constructor.name+' got no query result'));
       return;

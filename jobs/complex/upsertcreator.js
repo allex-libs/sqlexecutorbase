@@ -1,5 +1,17 @@
-function createUpsertJob (lib, mylib, sqlsentencing) {
+function createUpsertJob (lib, mylib, sqlsentencing, specializations) {
   'use strict';
+
+  function myRowsAffected (sqlresult) {
+    return (sqlresult &&
+      lib.isArray(sqlresult.rowsAffected) &&
+      sqlresult.rowsAffected.length>0)
+      ?
+      sqlresult.rowsAffected[0]
+      :
+      0
+  }
+
+  var rowsAffected = specializations.rowsAffected || myRowsAffected;
 
   var qlib = lib.qlib;
   var SteppedJobOnSteppedInstance = qlib.SteppedJobOnSteppedInstance;
@@ -85,13 +97,7 @@ function createUpsertJob (lib, mylib, sqlsentencing) {
   };
   UpsertJobCore.prototype.onDoTheInsertOrUpdate = function (dotheinsertorupdateresult) {
     exectime += (Date.now()-this.start);
-    var res = (dotheinsertorupdateresult &&
-      lib.isArray(dotheinsertorupdateresult.rowsAffected) &&
-      dotheinsertorupdateresult.rowsAffected.length>0)
-      ?
-      dotheinsertorupdateresult.rowsAffected[0]
-      :
-      0;
+    var res = rowsAffected(dotheinsertorupdateresult);
     //console.log('tablename', this.options.tablename, 'selecttime', selecttime, 'exectime', exectime);
     return this.isUpdate() 
     ?

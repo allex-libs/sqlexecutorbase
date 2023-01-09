@@ -1,8 +1,45 @@
-function createUpsertManyJob (lib, mylib, sqlsentencing) {
+function createUpsertManyJob (lib, mylib, sqlsentencing, specializations) {
   'use strict';
 
   var qlib = lib.qlib;
   var SteppedJobOnSteppedInstance = qlib.SteppedJobOnSteppedInstance;
+
+  function readeranalyzer (readrecordset) {
+    return lib.isArray(readrecordset) && readrecordset.length>0;
+  }
+
+  function myWereRecordsRead (sqlresult) {
+    if (!(sqlresult &&
+      lib.isArray(sqlresult.recordsets)
+    )){
+      throw new lib.Error('NO_RECORDSETS', 'No recordsets were found in SQL result');
+    }
+    return sqlresult.recordsets.map(readeranalyzer);
+  }
+  var wereRecordsRead = specializations.wereRecordsRead || myWereRecordsRead;
+
+  function execresultanalyzer (recordsread, res, rowsaff, index) {
+    var read;
+    if (rowsaff) {
+      read = recordsread[index];
+      res[read ? 'updated' : 'inserted'] ++;
+    }
+    return res;
+  };
+
+  function myUpdatedInserted (sqlresult, recordsread) {
+    var ret;
+    ret = (sqlresult &&
+      lib.isArray(sqlresult.rowsAffected) &&
+      sqlresult.rowsAffected.length>0)
+      ?
+      sqlresult.rowsAffected.reduce(execresultanalyzer.bind(null, recordsread), {updated: 0, inserted:0})
+      :
+      {updated: 0, inserted: 0}
+    recordsread = null;
+    return ret;
+  }
+  var updatedInserted = specializations.updatedInserted || myUpdatedInserted;
 
   var selecttime = 0;
   var exectime = 0;
@@ -57,13 +94,11 @@ function createUpsertManyJob (lib, mylib, sqlsentencing) {
   };
   UpsertManyJobCore.prototype.onDoRead = function (doreadresult) {
     selecttime += (Date.now()-this.start);
-    if (!(doreadresult &&
-      lib.isArray(doreadresult.recordsets)
-    )){
+    try {
+      this.recordRead = wereRecordsRead(doreadresult);
+    } catch (e) {
       this.finalResult = {inserted: 0, updated:0};
-      return;
     }
-    this.recordRead = doreadresult.recordsets.map(readeranalyzer);
   };
   UpsertManyJobCore.prototype.doTheInsertOrUpdate = function () {
     this.start = Date.now();
@@ -73,15 +108,10 @@ function createUpsertManyJob (lib, mylib, sqlsentencing) {
     )).go();
   };
   UpsertManyJobCore.prototype.onDoTheInsertOrUpdate = function (dotheinsertorupdateresult) {
+    var ret;
     exectime += (Date.now()-this.start);
     //console.log('tablename', this.options.tablename, 'selecttime', selecttime, 'exectime', exectime);
-    return (dotheinsertorupdateresult &&
-      lib.isArray(dotheinsertorupdateresult.rowsAffected) &&
-      dotheinsertorupdateresult.rowsAffected.length>0)
-      ?
-      dotheinsertorupdateresult.rowsAffected.reduce(this.execResultAnalyzer.bind(this), {updated: 0, inserted:0})
-      :
-      {updated: 0, inserted: 0};
+    return updatedInserted(dotheinsertorupdateresult, this.recordRead);
   };
 
   UpsertManyJobCore.prototype.steps = [
@@ -97,7 +127,7 @@ function createUpsertManyJob (lib, mylib, sqlsentencing) {
       this.options.tablename,
       this.options.selectfields,
       rec
-    ), ' ');
+    ), ';\n');
   };
   UpsertManyJobCore.prototype.execCreator = function (res, read, index) {
     return lib.joinStringsWith(res,
@@ -116,20 +146,9 @@ function createUpsertManyJob (lib, mylib, sqlsentencing) {
         this.allfields
       )
       ,
-      ' ');
-  };
-  UpsertManyJobCore.prototype.execResultAnalyzer = function (res, rowsaff, index) {
-    var read;
-    if (rowsaff) {
-      read = this.recordRead[index];
-      res[read ? 'updated' : 'inserted'] ++;
-    }
-    return res;
+      ';\n');
   };
 
-  function readeranalyzer (readrecordset) {
-    return lib.isArray(readrecordset) && readrecordset.length>0;
-  }
 
   function UpsertManyJob (executor, options, defer) {
     SteppedJobOnSteppedInstance.call(
