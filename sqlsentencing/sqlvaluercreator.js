@@ -32,11 +32,11 @@ function createSqlValuer (execlib, mylib, specializations) {
   function dateStringPart(char, datum) {
     switch (char) {
       case 'm':
-        return datum.getMonth()+1;
+        return lib.prependToString('0', 2, (datum.getMonth()+1)+'');
       case 'd':
-        return datum.getDay();
+        return lib.prependToString('0', 2, datum.getDate()+'');
       case 'y':
-        return datum.getFullYear();
+        return lib.prependToString('0', 4, datum.getFullYear()+'');
       default:
         throw new lib.Error('UNRECOGNIZED_DATEFORMAT_CHAR', char+' is not a valid dateformat char');
     }
@@ -53,7 +53,13 @@ function createSqlValuer (execlib, mylib, specializations) {
     return res;
   }
   function toSqlValue (value) {
-    if (value instanceof Date) return quoted(dateString(value)+' '+value.getHours()+':'+value.getMinutes()+':'+value.getSeconds()+'.'+value.getMilliseconds());
+    if (value instanceof Date) return quoted(
+      dateString(value)+' '+
+      lib.prependToString('0', 3, value.getHours()+':')+
+      lib.prependToString('0', 3, value.getMinutes()+':')+
+      lib.prependToString('0', 3, value.getSeconds()+'.')+
+      value.getMilliseconds()
+    );
     if (lib.isString(value)) return quoted(value);
     if (lib.isNumber(value)) return value;
     if (lib.isBoolean(value)) return value ? 1 : 0;
