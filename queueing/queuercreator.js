@@ -12,9 +12,11 @@ function createQueuer (execlib, mylib, qinghelperfuncs) {
     this.q = [];
     this.promise = this.defer.promise;
     this.recordsetcount = 0;
+    this.rowsaffectedcount = 0;
   }
   lib.inherit(Queuer, JobBase);
   Queuer.prototype.destroy = function () {
+    this.rowsaffectedcount = null;
     this.recordsetcount = null;
     this.promise = null;
     this.q = null;
@@ -37,6 +39,7 @@ function createQueuer (execlib, mylib, qinghelperfuncs) {
     //validateQueueObj?
     this.q.push(queueobj);
     this.recordsetcount += queueobj.recordsetcount;
+    this.rowsaffectedcount += queueobj.rowsaffectedcount;
   };
   Queuer.prototype.go = function () {
     (new mylib.jobs.SyncQuery(
@@ -72,8 +75,19 @@ function createQueuer (execlib, mylib, qinghelperfuncs) {
       ));
       return;
     }
+    if (res.rowsAffected.length != this.rowsaffectedcount) {
+      this.reject(new lib.Error(
+        'QUERY_RESULT_ROWSAFFECTEDCOUNT_MISMATCH',
+        this.constructor.name+
+        ' got '+
+        res.rowsAffected.length+
+        ' query result rowsAffected, but expected '+
+        this.rowsaffectedcount
+      ));
+      return;
+    }
     try {
-      promises = this.executor.analyzeQueueResult(this.q, res.recordsets);
+      promises = this.executor.analyzeQueueResult(this.q, res.recordsets, res.rowsAffected);
       if (!(lib.isArray(promises) && promises.length>0)) {
         this.resolve(true);
         return;

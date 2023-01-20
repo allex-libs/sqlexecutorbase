@@ -45,6 +45,7 @@ function createLookupType (execlib, mylib) {
       }
     }
     this.recordsetcount = 1;
+    this.rowsaffectedcount = 1;
   }
 
 
@@ -58,9 +59,9 @@ function createLookupType (execlib, mylib) {
     obj.ret[col.index] = obj.rec ? obj.rec[colname] : null;
   }
 
-  function analyzer (recordsets, cursor) {
+  function analyzer (recordsets, rscursor) {
     var rs, rec, ret, fielderobj;
-    rs = recordsets[cursor];
+    rs = recordsets[rscursor];
     rec = rs.length>0 ? rs[0] : null;
     ret = [];
     fielderobj = {

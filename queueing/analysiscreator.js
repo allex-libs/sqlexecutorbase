@@ -34,8 +34,11 @@ function createQueueResultAnalysisJob (execlib, templateslib, mylib) {
     if (!lib.isArray(this.options.recordsets)) {
       throw new lib.Error('NO_OPTIONS.RECORDSETS', this.constructor.name+' needs to have options.recordsets');
     }
-    if (!lib.isNumber(this.options.cursor)) {
-      throw new lib.Error('NO_OPTIONS.CURSOR', this.constructor.name+' needs to have options.cursor');
+    if (!lib.isNumber(this.options.rscursor)) {
+      throw new lib.Error('NO_OPTIONS.RSCURSOR', this.constructor.name+' needs to have options.rscursor');
+    }
+    if (!lib.isNumber(this.options.racursor)) {
+      throw new lib.Error('NO_OPTIONS.RACURSOR', this.constructor.name+' needs to have options.racursor');
     }
   };
 
@@ -47,7 +50,10 @@ function createQueueResultAnalysisJob (execlib, templateslib, mylib) {
     if (!(t && lib.isFunction(t.analyzer))) {
       throw new lib.Error('QUEUE_OBJ_TYPE_NOT_SUPPORTED', 'Queue object type '+item.type+' is not supported');
     }
-    return t.analyzer.call(this.options.item, this.options.recordsets, this.options.cursor, this.options.executor);
+    if (t.expectsrowsaffected) {
+      return t.analyzer.call(this.options.item, this.options.rowsaffected, this.options.racursor, this.options.executor);
+    }
+    return t.analyzer.call(this.options.item, this.options.recordsets, this.options.rscursor, this.options.executor, this.options.rowsaffected, this.options.racursor);
   };
   QueueResultAnalysisJobCore.prototype.runProc = function (rawresult) {
     var procs, procsres;

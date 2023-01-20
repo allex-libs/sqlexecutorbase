@@ -8,8 +8,8 @@ function createFirstRecord (execlib, mylib) {
     return t.validator.call(this, executor);
   }
 
-  function analyzer (recordsets, cursor, executor) {
-    var mycursor = cursor + (this.recordsetoffset||0);
+  function analyzer (recordsets, rscursor, executor) {
+    var mycursor = rscursor + (this.recordsetoffset||0);
     var rs = recordsets[mycursor];
     var rec;
     var lut;

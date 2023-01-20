@@ -9,9 +9,10 @@ function createVerbatim (execlib, mylib) {
     }
     this.sentence = '';
     this.recordsetcount = 0;
+    this.rowsaffectedcount = 0;
   }
 
-  function analyzer (recordsets, cursor) {
+  function analyzer () {
     return this.value;
   }
 

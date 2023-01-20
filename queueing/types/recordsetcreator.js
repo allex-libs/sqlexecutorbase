@@ -31,14 +31,15 @@ function createRecordset (execlib, mylib) {
 
   function validator () {
     this.recordsetcount=this.recordsetcount || 1;
+    this.rowsaffectedcount=this.recordsetcount;
     if (this.sentence && !lib.isString(this.sentence) && lib.has(this.sentence, ['template', 'replacements'])) {
       this.sentence = mylib.sqlsentencing.processTemplate(this.sentence.template, this.sentence.replacements)
     }
     prepareProc.call(this);
   }
 
-  function analyzer (recordsets, cursor) {
-    var mycursor = cursor + (this.recordsetoffset||0);
+  function analyzer (recordsets, rscursor) {
+    var mycursor = rscursor + (this.recordsetoffset||0);
     return recordsets[mycursor];
   }
 

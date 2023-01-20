@@ -20,12 +20,13 @@ function createCompositeType (execlib, mylib) {
     if (!this.sentence) {
       this.sentence = sentencer.call(this, executor);
     }
-    this.recordsetcount = this.items.reduce(function (res, it) {return res+it.recordsetcount}, 0);
+    this.recordsetcount = this.items.reduce(function (res, it) {return res+(it.recordsetcount||0)}, 0);
+    this.rowsaffectedcount = this.items.reduce(function (res, it) {return res+(it.rowsaffectedcount||0)}, 0);
     executor = null;
   }
 
-  function analyzer (recordsets, cursor, executor) {
-    var ret = executor.analyzeQueueResult(this.items, recordsets, cursor);
+  function analyzer (recordsets, rscursor, executor, rowsaffected, racursor) {
+    var ret = executor.analyzeQueueResult(this.items, recordsets, rowsaffected, rscursor, racursor);
     if (!(lib.isArray(ret) && ret.length>0)) {
       return;
     }

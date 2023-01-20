@@ -47,6 +47,9 @@ function createQueueing (execlib, templateslib, mylib, qinghelperfuncs) {
     if (!lib.isNumber(item.recordsetcount)) {
       throw new lib.JSONizingError('NO_QUEUE_OBJ_RECORDSETCOUNT', item, 'Must have a "recordsetcount" property (Number)');
     }
+    if (!lib.isNumber(item.rowsaffectedcount)) {
+      throw new lib.JSONizingError('NO_QUEUE_OBJ_ROWSAFFECTEDCOUNT', item, 'Must have a "rowsaffectedcount" property (Number)');
+    }
     /*
     if (!lib.isFunction(item.proc)) {
       throw new lib.JSONizingError('NO_QUEUE_OBJ_PROC', item, 'Must have a "proc" property (Function)');
@@ -59,9 +62,10 @@ function createQueueing (execlib, templateslib, mylib, qinghelperfuncs) {
       item.defer = q.defer();
     }
   };
-  mylib.Executor.prototype.analyzeQueueResult = function (items, recordsets, cursor) {
+  mylib.Executor.prototype.analyzeQueueResult = function (items, recordsets, rowsaffected, rscursor, racursor) {
     var i, item, ret = [], defer;
-    cursor = cursor || 0;
+    rscursor = rscursor || 0;
+    racursor = racursor || 0;
     for (i=0; i<items.length; i++) {
       item = items[i];
       ret.push(item.defer.promise);
@@ -69,12 +73,15 @@ function createQueueing (execlib, templateslib, mylib, qinghelperfuncs) {
         executor: this,
         item: item,
         recordsets: recordsets,
-        cursor: cursor
+        rowsaffected: rowsaffected,
+        rscursor: rscursor,
+        racursor: racursor
       }).then(
         onAnalysisSucceeded.bind(item),
         onAnalysisFailed.bind(item)
       );
-      cursor += item.recordsetcount;
+      rscursor += (item.recordsetcount||0);
+      racursor += (item.rowsaffectedcount||0);
       item = null;
     }
     return ret;
@@ -114,7 +121,7 @@ function createQueueing (execlib, templateslib, mylib, qinghelperfuncs) {
   function queueTypeAdder (qtitem) {
     var ritem, reqarry, _reqarry;
     if (!qtitem.dbname || qtitem.dbname==this.dbname) {
-      ritem = lib.pick(qtitem, ['validator', 'analyzer']);
+      ritem = lib.pick(qtitem, ['validator', 'analyzer', 'expectsrowsaffected']);
       if (qtitem.schema) {
         reqarry = [];
         _reqarry = reqarry;
