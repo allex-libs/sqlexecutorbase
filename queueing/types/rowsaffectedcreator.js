@@ -1,6 +1,8 @@
 function createRowsAffected (execlib, mylib) {
   'use strict';
 
+  var lib = execlib.lib;
+
   function validator () {
     this.recordsetcount=0;
     this.rowsaffectedcount = this.rowsaffectedcount || 1;
