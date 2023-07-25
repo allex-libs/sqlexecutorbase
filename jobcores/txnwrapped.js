@@ -136,6 +136,33 @@ function createTxnWrappedJobCore (execlib, specializations, mylib) {
     'finalize'
   ];
 
-  mylib.TxnWrapped = specializations.txnwrapped(execlib, TxnWrappedJobCore);
+  var TxnWrappedSpec = specializations.txnwrapped(execlib, TxnWrappedJobCore);
+  mylib.TxnWrapped = TxnWrappedSpec;
+
+  function multiTxnProducer (execs, index, res, jobproducerfunc, txnexec) {
+    res.push(txnexec);
+    if (index>=execs.length) {
+      return jobproducerfunc.apply(null, res);
+    }
+    var nextindex = index+1;
+    var ret = qlib.newSteppedJobOnSteppedInstance(
+      new TxnWrappedSpec(execs[index], multiTxnProducer.bind(null, execs, nextindex, res, jobproducerfunc))
+    );
+    execs = null;
+    nextindex = null;
+    res = null;
+    jobproducerfunc = null;
+    return ret;
+  }
+  function TxnMultiWrappedJobCore (executors, jobproducerfunc) {
+    var txnexecs = [];
+    TxnWrappedSpec.call(this, executors[0], multiTxnProducer.bind(null, executors, 1, txnexecs, jobproducerfunc));
+    executors = null;
+    jobproducerfunc = null;
+    txnexecs = null;
+  }
+  lib.inherit(TxnMultiWrappedJobCore, TxnWrappedSpec);
+
+  mylib.TxnMultiWrapped = TxnMultiWrappedJobCore;
 }
 module.exports = createTxnWrappedJobCore;

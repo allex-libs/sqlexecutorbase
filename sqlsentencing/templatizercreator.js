@@ -2,7 +2,7 @@ function createTemplatizers (execlib, templateslib, mylib) {
   'use strict';
   var lib = execlib.lib;
 
-  function processTemplate(template, replacements) {
+  function processTemplate(template, replacements, prereplacements) {
     var tmplt;
     if (lib.isArray(template)) {
       tmplt = template.join('\n');
@@ -15,6 +15,7 @@ function createTemplatizers (execlib, templateslib, mylib) {
     }
     return templateslib.process({
       template: tmplt,
+      prereplacements: prereplacements,
       replacements: replacements
     });
   }

@@ -33,7 +33,7 @@ function createRecordset (execlib, mylib) {
     this.recordsetcount=this.recordsetcount || 1;
     this.rowsaffectedcount= lib.isNumber(this.rowsaffectedcount) ? this.rowsaffectedcount : this.recordsetcount;
     if (this.sentence && !lib.isString(this.sentence) && lib.has(this.sentence, ['template', 'replacements'])) {
-      this.sentence = mylib.sqlsentencing.processTemplate(this.sentence.template, this.sentence.replacements)
+      this.sentence = mylib.sqlsentencing.processTemplate(this.sentence.template, this.sentence.replacements, this.sentence.prereplacements)
     }
     prepareProc.call(this);
   }
