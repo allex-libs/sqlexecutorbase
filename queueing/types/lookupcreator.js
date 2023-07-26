@@ -32,6 +32,9 @@ function createLookupType (execlib, mylib) {
     if (!lib.isNonEmptyString(this.what)) {
       throw new lib.JSONizingError('NO_QUEUE_OBJ_WHAT', this, 'Must have a non-empty "what" property (String)');
     }
+    if (this.where && !lib.isString(this.where) && lib.has(this.where, ['template'])) {
+      this.where = mylib.sqlsentencing.processTemplate(this.where.template, this.where.replacements, this.where.prereplacements)
+    }
     if (!this.sentence) {
       this.sentence = sentencer.call(this)
     }
@@ -82,7 +85,7 @@ function createLookupType (execlib, mylib) {
     schema: {
       table: {type: 'string', required: true},
       what: {type: 'string', required: true},
-      where: {type: 'string'}
+      where: {type: ['string', 'object']}
     }
   }
 }

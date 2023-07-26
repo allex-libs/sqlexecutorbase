@@ -6,7 +6,7 @@ function createRowsAffected (execlib, mylib) {
   function validator () {
     this.recordsetcount=0;
     this.rowsaffectedcount = this.rowsaffectedcount || 1;
-    if (this.sentence && !lib.isString(this.sentence) && lib.has(this.sentence, ['template', 'replacements'])) {
+    if (this.sentence && !lib.isString(this.sentence) && lib.has(this.sentence, ['template'])) {
       this.sentence = mylib.sqlsentencing.processTemplate(this.sentence.template, this.sentence.replacements, this.sentence.prereplacements)
     }
   }
