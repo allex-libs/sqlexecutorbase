@@ -90,16 +90,20 @@ function createQueueing (execlib, templateslib, mylib, qinghelperfuncs) {
 
   //statics for Executor
   function doQueue (queueobj) {
-    if (lib.isArrayOfObjectsWithProperty(queueobj, 'type')) {
-      return q.all(queueobj.map(doQueue.bind(this)));
+    try {
+      if (lib.isArrayOfObjectsWithProperty(queueobj, 'type')) {
+        return q.all(queueobj.map(doQueue.bind(this)));
+      }
+      this.validateQueueObj(queueobj);
+      if (!this.queuer) {
+        this.queuer = new Queuer(this);
+        lib.runNext(queueTriggerer.bind(this));
+      }
+      this.queuer.push(queueobj);
+      return queueobj.defer.promise;
+    } catch (e) {
+      return q.reject(e);
     }
-    this.validateQueueObj(queueobj);
-    if (!this.queuer) {
-      this.queuer = new Queuer(this);
-      lib.runNext(queueTriggerer.bind(this));
-    }
-    this.queuer.push(queueobj);
-    return queueobj.defer.promise;
   }
   function maybeBuildQueueTypeRegistry () {
     if (this.queueTypeRegistry) {
