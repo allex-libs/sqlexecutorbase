@@ -33,6 +33,9 @@ function createQueuer (execlib, mylib, qinghelperfuncs) {
     return ret;
   };
   function rejecter (reason, item) {
+    if (!(item && item.defer)) {
+      return;
+    }
     item.defer.reject(reason);
   }
   Queuer.prototype.push = function (queueobj) {
