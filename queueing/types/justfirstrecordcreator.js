@@ -4,7 +4,11 @@ function createFirstRecord (execlib, mylib) {
   var lib = execlib.lib;
 
   function proc (rs) {
-    return (lib.isArray(rs) && rs.length>0) ? rs[0] : null;
+    var ret = (lib.isArray(rs) && rs.length>0) ? rs[0] : null;
+    if (ret && lib.isFunction(this.particularproc)) {
+      return this.particularproc(ret);
+    }
+    return ret;
   }
 
   return {
@@ -12,6 +16,7 @@ function createFirstRecord (execlib, mylib) {
     type: 'justfirstrecord',
     validator: function () {
       this.type = 'recordset';
+      this.particularproc = this.proc;
       this.rsproc = proc;
     },
     analyzer: lib.dummyFunc
