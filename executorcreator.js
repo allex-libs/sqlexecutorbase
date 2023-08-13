@@ -40,6 +40,14 @@ function createExecutor (execlib, resourcehandlinglib, mylib) {
     }
   };
 
+  SQLExecutor.prototype.maybeLogComment = function (thingy, caption) {
+    this.maybeLog([
+      '/*' + (caption ? ' '+caption : ''),
+      thingy,
+      '*/'
+    ].join('\n'));
+  };
+
   SQLExecutor.prototype.prepareForLog = function (thingy) {
     return '\n'+thingy;
   };

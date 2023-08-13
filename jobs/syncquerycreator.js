@@ -23,6 +23,7 @@ function createSyncQueryJob (lib, mylib) {
   };
 
   SyncQueryJob.prototype.makeUpError = function (reason) {
+    this.destroyable.maybeLogComment(reason ? reason.message : '', 'Sync Query Error');
     return new lib.Error('SYNCQUERY_ERROR', lib.joinStringsWith(this.query, reason ? reason.message : '', '\n'));
   };
 

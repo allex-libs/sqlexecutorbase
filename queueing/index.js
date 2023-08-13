@@ -5,13 +5,34 @@ function createQueueing (execlib, templateslib, mylib, qinghelperfuncs) {
   var analysis = require('./analysiscreator')(execlib, templateslib, mylib);
   var lib = execlib.lib;
   var q = lib.q;
+  var jobcoreslib = require('./jobcores')(lib);
+  var QueueSectorizer = require('./sectorizercreator')(lib, queue, queueTxned);
 
-  mylib.Executor.prototype.queue = function (queueobj) {
+  function txnedqueuer (queueobj, txnedexecutor) {
+    return jobcoreslib.newQueuer(txnedexecutor, queueobj);
+  }
+  function queueTxned (queueobj) {
+    var ret = lib.qlib.newSteppedJobOnSteppedInstance(
+      new mylib.jobcores.TxnWrapped(this, txnedqueuer.bind(null, queueobj))
+    ).go();
+    queueobj = null;
+    return ret;
+  };
+  function queue (queueobj) {
     var ret = this.connect().then(
       doQueue.bind(this, queueobj)
     );
     queueobj = null;
     return ret;
+  }
+
+
+  mylib.Executor.prototype.queue = function (queueobj) {
+    if (!lib.isArray(queueobj)) {
+      return queue.call(this, queueobj);
+    }
+    return (new QueueSectorizer(this, queueobj)).sectorize();
+    return queue.call(this, queueobj);
   };
   mylib.Executor.prototype.validateQueueObj = function (item) {
     var t, originaltype, schemaval;
