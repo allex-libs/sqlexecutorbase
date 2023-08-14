@@ -2,7 +2,7 @@ function createSQLExecutor (execlib, resourcehandlinglib, templateslib) {
   'use strict';
   var mylib = {};
   
-  //require('./helperjobs')(execlib, mylib);
+  require('./helpers')(execlib, mylib);
 
   require('./executorcreator')(execlib, resourcehandlinglib, mylib);
 
