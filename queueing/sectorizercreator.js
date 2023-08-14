@@ -10,6 +10,9 @@ function createSectorizer (lib, queue, queueTxned) {
     this.sectorizer = null;
   };
   QRunnerJobCore.prototype.run = function () {
+    if (this.sector.error) {
+      throw this.sector.error;
+    }
     if (!(lib.isArray(this.sector.items) && this.sector.items.length>0)) {
       return;
     }
@@ -33,7 +36,11 @@ function createSectorizer (lib, queue, queueTxned) {
   }
   QTerminatorJobCore.prototype.run = function () {
     var res = this.sectorizer.results;
+    var error = this.sectorizer.error;
     this.sectorizer.destroy();
+    if (error) {
+      throw error;
+    }
     return res;
   };
   QTerminatorJobCore.prototype.steps = [
@@ -103,8 +110,10 @@ function createSectorizer (lib, queue, queueTxned) {
     this.sectors = [];
     this.sector = null;
     this.results = [];
+    this.error = null;
   }
   QueueSectorizer.prototype.destroy = function () {
+    this.error = null;
     this.results = null;
     this.sector = null;
     if (this.sectors) {
@@ -148,7 +157,10 @@ function createSectorizer (lib, queue, queueTxned) {
   QueueSectorizer.prototype.jobizer = function (sector) {
     this.jobs.run('.', lib.qlib.newSteppedJobOnSteppedInstance(
       new QRunnerJobCore(this, sector)
-    ));
+    )).then(null, this.errorizer.bind(this));
+  };
+  QueueSectorizer.prototype.errorizer = function (reason) {
+    this.error = reason;
   };
   QueueSectorizer.prototype.pushSector = function () {
     if (!this.sector) {
