@@ -1,6 +1,8 @@
 function createJustDoIt (execlib, mylib) {
   'use strict';
 
+  var lib = execlib.lib;
+
   function validator () {
     this.recordsetcount=0;
     this.rowsaffectedcount=0;
