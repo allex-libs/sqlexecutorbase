@@ -3,6 +3,7 @@ function createRecordset (execlib, mylib) {
 
   var lib = execlib.lib;
 
+  /*
   function recordsetprocessor () {
     return this.rsproc.call(this, Array.prototype.slice.call(arguments));
   }
@@ -17,8 +18,24 @@ function createRecordset (execlib, mylib) {
     p = null;
     return ret;
   }
+  */
+
+  function myproc () {
+    var inrecords = Array.prototype.slice.call(arguments);
+    if (lib.isFunction(this.recproc)) {
+      inrecords = inrecords.map(this.recproc.bind(this));
+    }
+    if (lib.isFunction(this.rsproc)) {
+      return this.rsproc.call(this, inrecords);
+    }
+    return inrecords;
+  }
 
   function prepareProc () {
+    if (lib.isFunction(this.rsproc) || lib.isFunction(this.recproc)) {
+      this.proc = myproc;
+    }
+    /*
     if (lib.isFunction(this.rsproc)) {
       this.proc = recordsetprocessor;
       return;
@@ -27,6 +44,7 @@ function createRecordset (execlib, mylib) {
       this.proc = recordprocessor;
       return;
     }
+    */
   }
 
   function validator () {
