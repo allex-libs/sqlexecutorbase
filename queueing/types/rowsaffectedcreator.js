@@ -9,6 +9,16 @@ function createRowsAffected (execlib, mylib) {
     if (this.sentence && !lib.isString(this.sentence) && lib.has(this.sentence, ['template'])) {
       this.sentence = mylib.sqlsentencing.processTemplate(this.sentence.template, this.sentence.replacements, this.sentence.prereplacements)
     }
+    if (this.totalall) {
+      this.proc = allsummer;
+    }
+  }
+
+  function allsummer () {
+    return Array.prototype.slice.call(arguments).reduce(summer, 0);
+  }
+  function summer (res, rowsaffected) {
+    return res+rowsaffected;
   }
 
   function analyzer (rowsaffected, rscursor) {
