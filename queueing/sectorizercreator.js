@@ -18,9 +18,9 @@ function createSectorizer (lib, queue, queueTxned) {
     }
     return this.sector.func(this.sectorizer.lastResult);
   };
-  QRunnerJobCore.prototype.run = function () {
+  QRunnerJobCore.prototype.run = function (funcres) {
     if (!(lib.isArray(this.sector.items) && this.sector.items.length>0)) {
-      return;
+      return funcres;
     }
     return this.sector.qHandler.call(this.sectorizer.executor, this.sector.items);
   };
