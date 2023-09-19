@@ -23,7 +23,7 @@ function createJustDoIt (execlib, mylib) {
       sentence: mylib.sqlsentencing.insertValuesOfHashArray(
         this.tablename,
         [this.record],
-        [].concat(this.selectfields).concat(this.setfields)
+        [].concat(this.selectfields||[]).concat(this.setfields||[]).concat(this.setonlyfields||[])
       ),
       field: 'inserted',
       result: this.result
@@ -59,7 +59,8 @@ function createJustDoIt (execlib, mylib) {
       tablename: {type: 'string', required: true},
       record: {type: ['object', 'array'], required: true},
       selectfields: {type: 'array', items: {type: 'string'}},
-      setfields: {type: 'array', items: {type: 'string'}}
+      setfields: {type: 'array', items: {type: 'string'}},
+      setonlyfields: {type: 'array', items: {type: 'string'}}
     }
   };
 }
