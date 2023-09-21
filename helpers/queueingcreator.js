@@ -33,5 +33,12 @@ function createSQLQueueingHelpers (execlib, mylib) {
     return arry.reduce(thener, {promise: null, result: []}).promise;
   }
   mylib.helpers.queueOneAfterAnother = queueOneAfterAnother;
+  function addToExecQueue(queue, exec, subqueue) {
+    if (!(lib.isArray(queue)&&lib.isArray(subqueue)&&subqueue.length>0)) {
+      return;
+    }
+    queue.push([exec, subqueue.splice(0)]);
+  }
+  mylib.helpers.addToExecQueue = addToExecQueue;
 }
 module.exports = createSQLQueueingHelpers;
