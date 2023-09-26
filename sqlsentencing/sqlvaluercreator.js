@@ -139,7 +139,8 @@ function createSqlValuer (execlib, mylib, specializations) {
     ret = '(SELECT '+hpns+' FROM '+toValuesTableOfHashArray(arrayofhashes, arrayofhashpropertynames)+')';
     return ret;
   }
-  function insertValuesOfHashArray (tablename, arrayofhashes, arrayofhashpropertynames) {
+  function insertValuesOfHashArray (tablename, arrayofhashes, arrayofhashpropertynames, limitrows) {
+    var done, temparry;
     var hpns, ret;
     if (!lib.isArray(arrayofhashes)) {
       throw new lib.Error('HASHES_NOT_AN_ARRAY', 'Hashes has to be an Array of Objects');
@@ -150,10 +151,28 @@ function createSqlValuer (execlib, mylib, specializations) {
     if (arrayofhashes.length<1) {
       return '';
     }
+    if (lib.isNumber(limitrows)) {
+      done = 0;
+      ret = '';
+      while (done<arrayofhashes.length) {
+        temparry = arrayofhashes.slice(done, done+limitrows);
+        ret = lib.joinStringsWith(ret, insertValuesOfHashArray(tablename, temparry, arrayofhashpropertynames), '\n');
+        done += temparry.length;
+      }
+      return ret;
+    }
     hpns = arrayofhashpropertynames.join(',');
     ret = 'INSERT INTO '+tablename+' ('+hpns+') '+justValuesOfHashArray(arrayofhashes, arrayofhashpropertynames);
     return ret;
-
+  }
+  function insertChunksOfHashArray (arrayofhashes, limitrows) {
+    if (!lib.isArray(arrayofhashes)) {
+      return 0;
+    }
+    if (!lib.isNumber(limitrows)) {
+      return 1;
+    }
+    return Math.ceil(arrayofhashes.length/limitrows);
   }
 
   function SetStringMaker(obj){
@@ -227,6 +246,7 @@ function createSqlValuer (execlib, mylib, specializations) {
   mylib.toValuesOfScalarArray = toValuesOfScalarArray;
   mylib.toValuesOfHashArray = toValuesOfHashArray;
   mylib.insertValuesOfHashArray = insertValuesOfHashArray;
+  mylib.insertChunksOfHashArray = insertChunksOfHashArray;
   mylib.SetStringMaker = SetStringMaker;
   mylib.InsertStringMaker = InsertStringMaker;
   mylib.selectViaFieldNames = selectViaFieldNames;
