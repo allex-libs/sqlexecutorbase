@@ -162,7 +162,7 @@ function createSqlValuer (execlib, mylib, specializations) {
       return ret;
     }
     hpns = arrayofhashpropertynames.join(',');
-    ret = 'INSERT INTO '+tablename+' ('+hpns+') '+justValuesOfHashArray(arrayofhashes, arrayofhashpropertynames);
+    ret = 'INSERT INTO '+tablename+' ('+hpns+') '+toValuesOfHashArray(arrayofhashes, arrayofhashpropertynames);
     return ret;
   }
   function insertChunksOfHashArray (arrayofhashes, limitrows) {
