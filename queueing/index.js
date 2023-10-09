@@ -35,7 +35,7 @@ function createQueueing (execlib, templateslib, mylib, qinghelperfuncs) {
     return queue.call(this, queueobj);
   };
   mylib.Executor.prototype.validateQueueObj = function (item) {
-    var t, originaltype, schemaval;
+    var t, originaltype;
     maybeBuildQueueTypeRegistry.call(this);
     if (!item) {
       throw new lib.Error('NO_QUEUE_OBJ', 'Queue obj not specified');
@@ -49,14 +49,7 @@ function createQueueing (execlib, templateslib, mylib, qinghelperfuncs) {
       throw new lib.JSONizingError('QUEUE_OBJ_TYPE_NOT_SUPPORTED', item, 'type '+item.type+' not recognized');
     }
     if (t.schema) {
-      schemaval = lib.jsonschema.validate(item, t.schema, {throwError: false});
-      if (schemaval.errors.length) {
-        throw new lib.JSONizingError(
-          'QUEUE_OBJ_SCHEMA_VALIDATION_FAILED',
-          item,
-          schemaval.errors.map(function (e) {return e.toString();}).join('\n')
-        );
-      }
+      lib.jsonSchemValidateToJsonizedErrorThrow(item, t.schema);
     }
     t.validator.call(item, this);
     if (originaltype !== item.type) {
@@ -138,25 +131,12 @@ function createQueueing (execlib, templateslib, mylib, qinghelperfuncs) {
     }
     this.queueTypes.forEach(queueTypeAdder.bind(this));
   }
-  function requiredpicker (arry, sch, fld) {
-    if (sch && sch.required) {
-      arry.push(fld);
-    }
-  }
   function queueTypeAdder (qtitem) {
     var ritem, reqarry, _reqarry;
     if (!qtitem.dbname || qtitem.dbname==this.dbname) {
       ritem = lib.pick(qtitem, ['validator', 'analyzer', 'expectsrowsaffected']);
       if (qtitem.schema) {
-        reqarry = [];
-        _reqarry = reqarry;
-        lib.traverseShallow(qtitem.schema, requiredpicker.bind(null, _reqarry));
-        _reqarry = null;
-        ritem.schema = {
-          type: 'object',
-          properties: qtitem.schema,
-          required: reqarry
-        };
+        ritem.schema = lib.allexSpecToJsonSchema(qtitem.schema);
       }
       this.queueTypeRegistry.add(qtitem.type, ritem);
     }
