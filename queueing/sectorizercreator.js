@@ -152,7 +152,7 @@ function createSectorizer (lib, queue, queueTxned) {
     if (lib.isFunction(qitem)) {
       return new FuncSector(qitem);
     }
-    if (isTxnEnd(qitem)) {
+    if (isTxnEnd.call(qitem)) {
       throw new lib.Error('CANNOT_PRODUCE_SECTOR', 'A sector cannot be started with '+qitem);
     }
     return new PlainSector(qitem);
