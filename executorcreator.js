@@ -5,10 +5,51 @@ function createExecutor (execlib, resourcehandlinglib, mylib) {
 
   var ResMixin = resourcehandlinglib.mixins.ResourceHandler;
 
+  function SQLLogger () {
+    this.logname = null;
+    this.lastInvocation = lib.now();
+  }
+  SQLLogger.prototype.destroy = function () {
+    this.lastInvocation = null;
+    this.logname = null;
+  };
+  SQLLogger.prototype.setLogName = function (logname) {
+    this.logname = logname;
+  };
+  SQLLogger.prototype.maybeLog = function (thingy) {
+    var li = this.lastInvocation;
+    this.lastInvocation = lib.now();
+    maybeWriteToFile.call(this,
+      '\n'+formatComment(
+        'After '+((this.lastInvocation-li)/1000)+' sec',
+        ''
+      )+thingy
+    );
+  };
+  SQLLogger.prototype.maybeLogComment = function (thingy, caption) {
+    maybeWriteToFile.call(this, formatComment(thingy, caption));
+  };
+  //statics on SQLLogger
+  function maybeWriteToFile (thingy) {
+    if (this.logname) {
+      fs.appendFileSync(this.logname, thingy);
+    }
+  } 
+  //endof statics on SQLLogger
+  //functions for SQLLogger
+  function formatComment (thingy, caption) {
+    return (caption ? [
+      '/*' + (caption ? ' '+caption : ''),
+      thingy,
+      '*/'
+    ].join('\n') : '/* '+thingy+' */')+'\n';
+  }
+  //endof functions for SQLLogger
+
   function SQLExecutor (options) {
     ResMixin.call(this, options);
     this.dbname = null;
-    this.logname = null;
+    this.logger = new SQLLogger();
     this.queueTypeRegistry = null;
     this.queuer = null;
   }
@@ -22,30 +63,33 @@ function createExecutor (execlib, resourcehandlinglib, mylib) {
        this.queueTypeRegistry.destroy();
     }
     this.queueTypeRegistry = null;
-    this.logname = null;
+    if(this.logger) {
+      this.logger.destroy();
+    }
+    this.logger = null;
     this.dbname = null;
     ResMixin.prototype.destroy.call(this);
   };
 
   SQLExecutor.prototype.startLog = function (logname) {
-    this.logname = logname;
+    if (this.logger) {
+      this.logger.setLogName(logname);
+    }
   };
   SQLExecutor.prototype.stopLog = function () {
     this.startLog(null);
   };
 
   SQLExecutor.prototype.maybeLog = function (thingy) {
-    if (this.logname) {
-      fs.appendFileSync(this.logname, this.prepareForLog(thingy));
+    if (this.logger) {
+      this.logger.maybeLog(this.prepareForLog(thingy));
     }
   };
 
   SQLExecutor.prototype.maybeLogComment = function (thingy, caption) {
-    this.maybeLog([
-      '/*' + (caption ? ' '+caption : ''),
-      thingy,
-      '*/'
-    ].join('\n'));
+    if (this.logger) {
+      this.logger.maybeLogComment(thingy, caption);
+    }
   };
 
   SQLExecutor.prototype.prepareForLog = function (thingy) {

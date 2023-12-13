@@ -10,6 +10,7 @@ function createSyncQueryJob (lib, mylib) {
     SyncJob.call(this, executor, defer);
     this.query = query;
     this.options = options;
+    this.startTime = null;
   }
   lib.inherit(SyncQueryJob, SyncJob);
   SyncQueryJob.prototype.destroy = function () {
@@ -18,8 +19,13 @@ function createSyncQueryJob (lib, mylib) {
     SyncJob.prototype.destroy.call(this);
   };
   SyncQueryJob.prototype.useTheRequest = function (request) {
+    this.startTime = lib.now();
     this.destroyable.maybeLog(this.query);
     return request.query(this.query);
+  };
+  SyncQueryJob.prototype.onResult = function (res) {
+    this.destroyable.maybeLogComment(this.destroyable.prepareForLog('Done in '+(lib.now()-this.startTime)/1000+' sec'));
+    return SyncJob.prototype.onResult.call(this, res);
   };
 
   SyncQueryJob.prototype.makeUpError = function (reason) {
