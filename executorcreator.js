@@ -3,6 +3,7 @@ var fs = require('fs');
 function createExecutor (execlib, resourcehandlinglib, mylib) {
   'use strict';
 
+  var lib = execlib.lib;
   var ResMixin = resourcehandlinglib.mixins.ResourceHandler;
 
   function SQLLogger () {
@@ -27,6 +28,7 @@ function createExecutor (execlib, resourcehandlinglib, mylib) {
     );
   };
   SQLLogger.prototype.maybeLogComment = function (thingy, caption) {
+    this.lastInvocation = lib.now();
     maybeWriteToFile.call(this, formatComment(thingy, caption));
   };
   //statics on SQLLogger
