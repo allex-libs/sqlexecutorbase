@@ -1,6 +1,6 @@
 {
   "name": "allex_sqlexecutorbaselib",
-  "version": "1.0.13",
+  "version": "1.0.14",
   "description": "AllexJS lib for a Base SQL Executor",
   "main": "index.js",
   "scripts": {
