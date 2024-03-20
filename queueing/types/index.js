@@ -10,6 +10,7 @@ function createBaseTypes (execlib, mylib) {
   ret.push(require('./recordset2arryofscalarscreator')(execlib, mylib));
   ret.push(require('./firstrecordcreator')(execlib, mylib));
   ret.push(require('./justfirstrecordcreator')(execlib, mylib));
+  ret.push(require('./justfirstrecordunconditionallycreator')(execlib, mylib));
   ret.push(require('./rowsaffectedcreator')(execlib, mylib));
   
   ret.push(require('./upsertcreator')(execlib, mylib));
